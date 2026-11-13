@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>จัดรายการกระเช้า | Villa Market</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy: #102c55;
+      --blue: #184775;
+      --red: #ab1733;
+      --muted: #53627a;
+      --line: #dbe2ed;
+      --pale: #f3f6fb;
+      --white: #fff;
+      font-family: "Inter", "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif;
+      line-height: 1.55;
+      color: var(--navy);
+      background: var(--pale);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; }
+    h1, h2, p { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .52; }
+    :focus-visible { outline: 3px solid #4986d5; outline-offset: 3px; }
+    .brand-bar { background: var(--navy); border-bottom: 4px solid var(--red); color: white; }
+    .brand-inner { max-width: 1192px; margin: auto; padding: 11px 24px; display: flex; align-items: center; gap: 16px; }
+    .brand-mark { display: inline-grid; place-items: center; position: relative; width: 86px; height: 43px; background: white; border-radius: 5px; flex: none; }
+    .brand-mark img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: contain; }
+    .brand-mark span { color: var(--navy); font-size: 11px; font-weight: 800; text-align: center; }
+    .brand-inner p { font-size: 13px; letter-spacing: .02em; }
+    .workspace { max-width: 1192px; padding: 29px 24px 50px; margin: auto; }
+    .heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 22px; }
+    h1 { font-size: clamp(27px, 4vw, 37px); font-weight: 800; line-height: 1.2; }
+    .heading p { color: var(--muted); margin-top: 7px; }
+    .panel { border: 1px solid var(--line); border-radius: 13px; background: white; margin-bottom: 16px; box-shadow: 0 2px 6px #102c5508; }
+    .scan-panel { padding: 19px 20px; }
+    .field-label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .scan-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; }
+    input { color: var(--navy); border: 1px solid #aebdd0; border-radius: 7px; padding: 9px 11px; background: white; min-width: 0; }
+    .scan-controls input { min-height: 47px; font-size: 17px; }
+    input[aria-invalid="true"] { border: 2px solid var(--red); }
+    .button { border: 1px solid transparent; border-radius: 7px; padding: 9px 15px; font-weight: 700; display: inline-flex; justify-content: center; align-items: center; gap: 8px; white-space: nowrap; min-height: 43px; }
+    .button svg { width: 18px; height: 18px; }
+    .primary { background: var(--blue); color: white; }
+    .primary:hover:enabled { background: var(--navy); }
+    .outline { background: white; border-color: #aebdd0; color: var(--blue); }
+    .outline:hover:enabled { background: var(--pale); }
+    .print-button { color: white; background: var(--red); }
+    .print-button:hover:enabled { background: #861128; }
+    .hint, .scan-status { font-size: 13px; margin-top: 8px; }
+    .hint { color: var(--muted); }
+    .scan-status { font-weight: 700; }
+    .scan-status[data-kind="success"] { color: #155d43; }
+    .scan-status[data-kind="error"], .date-warning { color: var(--red); }
+    .choices { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 7px; }
+    .choices .button { text-align: left; white-space: normal; }
+    .camera { margin-top: 13px; padding: 10px; border-radius: 8px; background: #10253e; color: white; }
+    .camera video { display: block; width: 100%; max-height: 300px; background: #081425; border-radius: 4px; }
+    .camera p { margin-top: 7px; text-align: center; font-size: 13px; }
+    .settings { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; padding: 14px 20px; }
+    .settings input { width: 100%; }
+    .date-warning { font-size: 12px; margin-top: 4px; }
+    .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+    .section-head h2, .preview > h2 { font-size: 19px; }
+    #item-count { color: var(--muted); font-size: 13px; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; text-align: left; }
+    th { font-weight: 700; }
+    .products { min-width: 815px; }
+    .products th { background: var(--pale); color: var(--blue); font-size: 12px; white-space: nowrap; }
+    .products th, .products td { padding: 9px 12px; }
+    .products td { border-bottom: 1px solid #e8edf4; vertical-align: middle; font-size: 14px; }
+    .products .name-cell { min-width: 170px; font-weight: 700; overflow-wrap: anywhere; }
+    .mono { font-family: "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .line-total { color: var(--red); font-weight: 700; white-space: nowrap; }
+    .products input { padding: 4px 6px; min-height: 34px; }
+    .qty-input { width: 60px; text-align: center; }
+    .date-input { width: 105px; }
+    .price-input { width: 84px; }
+    .remove { color: var(--red); background: #fff3f5; border: 0; padding: 6px 9px; border-radius: 6px; }
+    .remove:hover { background: #fbe2e8; }
+    .empty { color: var(--muted); padding: 27px 20px; text-align: center; }
+    .totals { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 13px 20px; border-top: 1px solid var(--line); }
+    .totals strong { color: var(--red); font-size: 23px; text-align: right; }
+    .preview { padding: 15px 20px 20px; }
+    .preview > h2 { margin-bottom: 11px; }
+    .labels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .label { padding: 10px; border: 1px dashed #91a0b3; background: white; color: #152437; min-width: 0; }
+    .label-head { display: grid; grid-template-columns: 62px minmax(0, 1fr) 62px; align-items: center; gap: 4px; border-bottom: 1px solid #dfe6ee; margin-bottom: 5px; padding-bottom: 3px; }
+    .label-head h2 { grid-column: 2; text-align: center; font-size: 17px; line-height: 1.2; overflow-wrap: anywhere; }
+    .label-head .brand-mark { grid-column: 3; width: 62px; height: 31px; }
+    .label-head .brand-mark span { font-size: 9px; }
+    .label table { table-layout: fixed; font-size: 11px; line-height: 1.24; }
+    .label th, .label td { padding: 3px 4px; border-bottom: 1px solid #e1e6ed; overflow-wrap: anywhere; }
+    .label th { background: #fcecf0; color: #801530; }
+    .label .label-number { width: 9%; }
+    .label .label-qty { width: 11%; }
+    .label .label-price { width: 17%; }
+    .label .label-expiry { width: 19%; }
+    .label .label-barcode { width: 43%; }
+    .label .label-total { color: var(--red); font-size: 15px; font-weight: 800; text-align: right; margin-top: 5px; }
+    .label .vat { color: #465165; text-align: right; font-size: 10px; }
+    .label .notes { font-size: 10px; line-height: 1.32; margin-top: 5px; }
+    .label .return-note { padding: 4px 6px; margin-top: 4px; border-left: 2px solid var(--red); background: #fcecf0; color: #801530; font-weight: 700; }
+    .barcode-svg { display: block; max-width: 100%; width: auto; height: 31px; margin: 0 auto; }
+    .barcode-text { display: block; text-align: center; overflow-wrap: anywhere; }
+    #print-area { position: absolute; top: 0; left: -12000px; width: 280mm; }
+    .print-sheet { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3mm; width: 280mm; align-items: stretch; }
+    .print-sheet .label { min-height: 190mm; padding: 3mm; }
+    .print-sheet .label table { font-size: 10px; }
+    .print-sheet .barcode-svg { height: 30px; }
+    @media (max-width: 660px) {
+      .brand-inner, .workspace { padding-left: 13px; padding-right: 13px; }
+      .workspace { padding-top: 19px; }
+      .heading { align-items: flex-start; flex-direction: column; }
+      .scan-panel, .settings, .section-head, .totals, .preview { padding-left: 13px; padding-right: 13px; }
+      .scan-controls { grid-template-columns: minmax(0, 1fr) auto; }
+      #camera-button { grid-column: 1 / -1; justify-self: start; }
+      .labels, .settings { grid-template-columns: minmax(0, 1fr); }
+    }
+    @page { size: A4 landscape; margin: 8mm; }
+    @media print {
+      :root { background: white; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #screen { display: none; }
+      #print-area { position: static; margin: 0 auto; }
+      .print-sheet { break-inside: avoid; }
+      .print-sheet + .print-sheet { break-before: page; }
+    }
+  </style>
+</head>
+<body>
+  <div id="screen">
+    <header class="brand-bar">
+      <div class="brand-inner">
+        <div class="brand-mark" data-brand></div>
+        <p>Villa Market · สุขุมวิท 33</p>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="heading">
+        <div>
+          <h1>จัดรายการกระเช้า</h1>
+          <p>สแกนสินค้าแล้วพิมพ์ป้ายสำหรับติดกระเช้า</p>
+        </div>
+        <button type="button" class="button print-button" id="print-button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 9V3h12v6M6 18H3V9h18v9h-3M6 15h12v6H6zM6 12h2"/></svg>
+          พิมพ์ป้าย A4
+        </button>
+      </div>
+
+      <section class="panel scan-panel" aria-label="ค้นหาสินค้า">
+        <form id="scan-form">
+          <label class="field-label" for="barcode">สแกนหรือกรอกบาร์โค้ด</label>
+          <div class="scan-controls">
+            <input id="barcode" name="barcode" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+                   enterkeyhint="search" maxlength="64" placeholder="กรอกเลขบาร์โค้ดสินค้า" aria-describedby="scan-hint" required>
+            <button class="button primary" id="lookup-button" type="submit">ค้นหาและเพิ่ม</button>
+            <button class="button outline" id="camera-button" type="button" aria-expanded="false" aria-controls="camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <span id="camera-button-text">เปิดกล้อง</span>
+            </button>
+          </div>
+          <p class="hint" id="scan-hint">เครื่องสแกน USB/Bluetooth ใช้ในช่องนี้ โดยตั้งให้ส่ง Enter หลังสแกน</p>
+        </form>
+        <div class="camera" id="camera" hidden>
+          <video id="camera-video" autoplay muted playsinline aria-label="ภาพจากกล้องสำหรับสแกนบาร์โค้ด"></video>
+          <p>จัดบาร์โค้ดให้อยู่กลางภาพ เมื่ออ่านได้ระบบจะเพิ่มสินค้าหนึ่งครั้ง</p>
+        </div>
+        <p class="scan-status" id="status" role="status" aria-live="polite" hidden></p>
+        <div id="choices" class="choices" hidden></div>
+      </section>
+
+      <section class="panel settings" aria-label="ข้อมูลกระเช้า">
+        <label>
+          <span class="field-label">ชื่อกระเช้า</span>
+          <input id="hamper-name" type="text" value="กระเช้าปีใหม่ 2026" maxlength="100">
+        </label>
+        <label>
+          <span class="field-label">กำหนดเปลี่ยนหรือคืน (พ.ศ.)</span>
+          <input id="return-date" type="text" value="28/02/2569" inputmode="numeric" maxlength="10" aria-describedby="return-warning">
+          <span id="return-warning" class="date-warning" hidden></span>
+        </label>
+      </section>
+
+      <section class="panel" aria-labelledby="items-title">
+        <div class="section-head">
+          <h2 id="items-title">รายการสินค้า</h2>
+          <span id="item-count">0 รายการ · 0 ชิ้น</span>
+        </div>
+        <div class="empty" id="empty-state">สแกนสินค้าชิ้นแรกเพื่อเริ่มจัดรายการ</div>
+        <div class="table-wrap" id="table-wrap" hidden>
+          <table class="products">
+            <thead><tr>
+              <th scope="col">ลำดับ</th><th scope="col">รหัสสินค้า</th><th scope="col">บาร์โค้ด</th><th scope="col">ชื่อสินค้า</th>
+              <th scope="col" class="center">จำนวน</th><th scope="col" class="right">ราคาต่อชิ้น</th><th scope="col" class="right">ราคารวม</th>
+              <th scope="col">หมดอายุ (ค.ศ.)</th><th scope="col">ลบ</th>
+            </tr></thead>
+            <tbody id="products"></tbody>
+          </table>
+        </div>
+        <div class="totals"><span>ราคารวม (รวม VAT)</span><strong id="total">0.00 บาท</strong></div>
+      </section>
+
+      <section class="panel preview" id="preview" aria-labelledby="preview-title" hidden>
+        <h2 id="preview-title">ตัวอย่างป้ายกระเช้า</h2>
+        <div class="labels" id="preview-labels"></div>
+      </section>
+    </main>
+  </div>
+  <div id="print-area" aria-hidden="true"></div>
+
+  <script>
+    'use strict';
+
+    const SHEET_ID = '1W4-vvVaM54oKXpT0JV5ZrD806tBNZ5PJjmJs3cZYITM';
+    const SHEET_TAB_ID = '1445016899';
+    const LOGO_URL = 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Villa_Market_Logo.svg';
+    const BARCODE_SCRIPT = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js';
+    const CAMERA_SCRIPT = 'https://unpkg.com/@zxing/browser@0.1.5';
+    const barcodePattern = /^[A-Za-z0-9._+\/-]{1,64}$/;
+    const currency = new Intl.NumberFormat('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const dateParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Bangkok', calendar: 'gregory', day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+
+    const byId = id => document.getElementById(id);
+    const scanInput = byId('barcode');
+    const scanButton = byId('lookup-button');
+    const cameraButton = byId('camera-button');
+    const cameraVideo = byId('camera-video');
+    const status = byId('status');
+    const choices = byId('choices');
+    const productsTable = byId('products');
+    const printButton = byId('print-button');
+    const printArea = byId('print-area');
+    const hamperInput = byId('hamper-name');
+    const returnInput = byId('return-date');
+
+    const products = [];
+    const libraryLoads = new Map();
+    const pendingScans = [];
+    let scanning = false;
+    let printing = false;
+    let cameraSession = null;
+    let cameraStart = null;
+    let requestId = 0;
+    let previewFrame = 0;
+
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      if (text !== undefined) node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    }
+
+    function renderBrand(mark) {
+      const fallback = element('span', 'Villa Market');
+      const logo = document.createElement('img');
+      logo.alt = '';
+      logo.decoding = 'async';
+      logo.addEventListener('load', () => { fallback.hidden = true; }, {once: true});
+      logo.addEventListener('error', () => { logo.hidden = true; }, {once: true});
+      mark.append(fallback, logo);
+      logo.src = LOGO_URL;
+      return mark;
+    }
+
+    function showStatus(message, kind = 'info') {
+      status.textContent = message;
+      status.dataset.kind = kind;
+      status.hidden = !message;
+    }
+
+    function focusScanner() {
+      scanInput.focus({preventScroll: true});
+    }
+
+    function loadLibrary(src, globalName) {
+      if (window[globalName]) return Promise.resolve(window[globalName]);
+      if (libraryLoads.has(src)) return libraryLoads.get(src);
+      const loaded = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        const fail = () => {
+          clearTimeout(timeout);
+          script.remove();
+          reject(new Error('โหลดส่วนประกอบไม่สำเร็จ'));
+        };
+        const timeout = setTimeout(fail, 10000);
+        script.src = src;
+        script.onload = () => {
+          if (!window[globalName]) return fail();
+          clearTimeout(timeout);
+          resolve(window[globalName]);
+        };
+        script.onerror = fail;
+        document.head.append(script);
+      });
+      libraryLoads.set(src, loaded);
+      loaded.catch(() => libraryLoads.delete(src));
+      return loaded;
+    }
+
+    function checkDigit(payload) {
+      let sum = 0;
+      let weight = 3;
+      for (let i = payload.length - 1; i >= 0; i--) {
+        sum += Number(payload[i]) * weight;
+        weight = weight === 3 ? 1 : 3;
+      }
+      return String((10 - sum % 10) % 10);
+    }
+
+    function isGtin(value) {
+      return /^\d+$/.test(value) && [8, 12, 13, 14].includes(value.length)
+        && checkDigit(value.slice(0, -1)) === value.at(-1);
+    }
+
+    function lookupCodes(code) {
+      const codes = new Set([code]);
+      if (!/^\d+$/.test(code)) return [...codes];
+      const valid = isGtin(code);
+      if (valid) {
+        codes.add(code.slice(0, -1));
+        if (code.length >= 12) {
+          let equivalent = code;
+          while (equivalent.length > 12 && equivalent.startsWith('0')) {
+            equivalent = equivalent.slice(1);
+            codes.add(equivalent);
+            codes.add(equivalent.slice(0, -1));
+          }
+          while (equivalent.length < 14) {
+            equivalent = '0' + equivalent;
+            codes.add(equivalent);
+            codes.add(equivalent.slice(0, -1));
+          }
+        }
+      }
+      if ([7, 11, 12, 13].includes(code.length)) codes.add(code + checkDigit(code));
+      return [...codes];
+    }
+
+    function printedCode(item) {
+      const stored = item.barcode;
+      const {scannedCode, codeFormat} = item;
+      let full = stored;
+      if (codeFormat !== 'CODE_128' && isGtin(scannedCode)) {
+        full = scannedCode;
+      } else if (codeFormat !== 'CODE_128' && /^\d+$/.test(stored)) {
+        if ([7, 11].includes(stored.length) || (stored.length === 12 && !isGtin(stored))) {
+          full = stored + checkDigit(stored);
+        }
+      }
+
+      const formats = {8: 'EAN8', 12: 'UPC', 13: 'EAN13', 14: 'ITF14'};
+      const standard = codeFormat !== 'CODE_128' && isGtin(full) ? formats[full.length] : null;
+      if (item.qty > 1 && standard) return {value: item.qty + '*' + full, format: 'CODE128'};
+      return {value: full, format: standard || 'CODE128'};
+    }
+
+    function sheetQuery(codeList) {
+      return new Promise((resolve, reject) => {
+        const callback = 'villaSheetResponse' + ++requestId;
+        const url = new URL('https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq');
+        const script = document.createElement('script');
+        // The query contains only validated barcode characters. Make regex metacharacters literal.
+        const matches = codeList.map(code => code.replace(/[.+]/g, mark => '[' + mark + ']')).join('|');
+        url.searchParams.set('gid', SHEET_TAB_ID);
+        url.searchParams.set('headers', '1');
+        url.searchParams.set('tq', "select A,E,F,U,AA where U matches '^(" + matches + ")$'");
+        url.searchParams.set('tqx', 'out:json;responseHandler:' + callback);
+        // Avoid reusing an earlier result after the product sheet changes.
+        url.searchParams.set('_', String(Date.now()));
+
+        const finish = (handler, result) => {
+          clearTimeout(timeout);
+          delete window[callback];
+          script.remove();
+          handler(result);
+        };
+        const failed = () => finish(reject, new Error('เชื่อมต่อ Google Sheets ไม่สำเร็จ ลองค้นหาอีกครั้งและตรวจสอบสิทธิ์เปิดลิงก์ชีต'));
+        const timeout = setTimeout(failed, 14000);
+        window[callback] = response => {
+          const errors = response?.errors || [];
+          if (errors.some(error => error.reason === 'no_data' || error.reason === 'empty_data_table')) {
+            return finish(resolve, []);
+          }
+          if (response?.status !== 'ok' && response?.status !== 'warning') return failed();
+          if (!Array.isArray(response?.table?.rows)) return failed();
+          finish(resolve, response.table.rows);
+        };
+        script.onerror = failed;
+        script.onload = () => {
+          if (window[callback]) failed();
+        };
+        script.src = url.href;
+        document.head.append(script);
+      });
+    }
+
+    function cellText(cell) {
+      return String(cell?.f ?? cell?.v ?? '').trim();
+    }
+
+    function parsePrice(value) {
+      const clean = String(value ?? '').replace(/[฿,\s]/g, '');
+      if (!/^\d+(?:\.\d+)?$/.test(clean)) return null;
+      const amount = Number(clean);
+      return Number.isFinite(amount) && Number.isSafeInteger(Math.round(amount * 100)) ? amount : null;
+    }
+
+    function distinctMatches(rows, codeList) {
+      const matched = new Map();
+      const accepted = new Set(codeList);
+      for (const row of rows) {
+        const [branch, sku, name, barcode, price] = row.c || [];
+        const item = {
+          branch: cellText(branch),
+          sku: cellText(sku),
+          name: cellText(name),
+          barcode: cellText(barcode),
+          price: parsePrice(price?.v ?? cellText(price))
+        };
+        if (!accepted.has(item.barcode) || !item.name) continue;
+        const group = matched.get(item.barcode) || new Map();
+        const key = JSON.stringify([item.sku, item.name, item.price]);
+        group.set(key, item);
+        matched.set(item.barcode, group);
+      }
+      if (matched.has(codeList[0])) return [...matched.get(codeList[0]).values()];
+      const aliases = new Map();
+      for (const code of codeList.slice(1)) {
+        for (const [key, item] of matched.get(code) || []) {
+          if (!aliases.has(key)) aliases.set(key, item);
+        }
+      }
+      return [...aliases.values()];
+    }
+
+    function addProduct(item, scan) {
+      const existing = products.find(product => product.sku === item.sku && product.barcode === item.barcode
+        && product.name === item.name && product.sourcePrice === item.price);
+      if (existing) {
+        existing.qty++;
+        if (isGtin(scan.code) && (!isGtin(existing.scannedCode) || existing.codeFormat === 'CODE_128')) {
+          existing.scannedCode = scan.code;
+          existing.codeFormat = scan.format;
+        }
+      } else {
+        products.push({...item, sourcePrice: item.price, qty: 1, expiryDate: '', scannedCode: scan.code, codeFormat: scan.format});
+      }
+      renderProducts();
+      showStatus('เพิ่ม ' + item.name + (existing ? ' · รวม ' + existing.qty + ' ชิ้น' : ''), 'success');
+    }
+
+    function selectProduct(options) {
+      return new Promise(resolve => {
+        choices.replaceChildren();
+        const finish = item => {
+          choices.hidden = true;
+          choices.replaceChildren();
+          focusScanner();
+          resolve(item);
+        };
+        for (const option of options) {
+          const price = option.price === null ? 'ยังไม่มีราคา' : currency.format(option.price) + ' บาท';
+          const label = [option.name, option.sku && 'SKU ' + option.sku, option.branch && 'สาขา ' + option.branch, price]
+            .filter(Boolean).join(' · ');
+          const button = element('button', label, 'button outline');
+          button.type = 'button';
+          button.addEventListener('click', () => finish(option), {once: true});
+          choices.append(button);
+        }
+        const cancel = element('button', 'ข้ามรายการนี้', 'button outline');
+        cancel.type = 'button';
+        cancel.addEventListener('click', () => finish(null), {once: true});
+        choices.append(cancel);
+        choices.hidden = false;
+        choices.firstElementChild.focus();
+      });
+    }
+
+    async function queueScan(raw, format = '') {
+      const code = String(raw).trim().replace(/\s+/g, '');
+      if (!code) return;
+      if (!barcodePattern.test(code)) {
+        showStatus('บาร์โค้ดมีอักขระที่ระบบอ่านไม่ได้ กรุณาตรวจสอบรหัส', 'error');
+        focusScanner();
+        scanInput.select();
+        return;
+      }
+      scanInput.value = '';
+      pendingScans.push({code, format});
+      if (scanning) return;
+
+      scanning = true;
+      scanButton.textContent = 'กำลังค้นหา…';
+      while (pendingScans.length) {
+        const scan = pendingScans.shift();
+        showStatus('กำลังค้นหา ' + scan.code + ' ใน Google Sheets…');
+        try {
+          const codes = scan.format === 'CODE_128' ? [scan.code] : lookupCodes(scan.code);
+          const matches = distinctMatches(await sheetQuery(codes), codes);
+          if (!matches.length) {
+            showStatus('ไม่พบบาร์โค้ด ' + scan.code + ' ในแท็บ Export', 'error');
+            continue;
+          }
+          if (matches.length === 1) {
+            addProduct(matches[0], scan);
+          } else {
+            showStatus('พบหลายรายการสำหรับ ' + scan.code + ' กรุณาเลือกสินค้าที่ตรงกับฉลาก');
+            const selected = await selectProduct(matches);
+            if (selected) addProduct(selected, scan);
+            else showStatus('ข้ามบาร์โค้ด ' + scan.code);
+          }
+        } catch (error) {
+          showStatus(error.message, 'error');
+          if (!pendingScans.length && !scanInput.value) {
+            scanInput.value = scan.code;
+            if (document.activeElement === scanInput) scanInput.select();
+          }
+        }
+      }
+      scanning = false;
+      scanButton.textContent = 'ค้นหาและเพิ่ม';
+    }
+
+    function updateCameraButton() {
+      cameraButton.setAttribute('aria-expanded', String(Boolean(cameraSession)));
+      byId('camera-button-text').textContent = cameraSession ? 'ปิดกล้อง' : 'เปิดกล้อง';
+      byId('camera').hidden = !cameraSession;
+    }
+
+    function closeCamera() {
+      const session = cameraSession;
+      cameraSession = null;
+      if (session?.controls) session.controls.stop();
+      if (session?.stream) session.stream.getTracks().forEach(track => track.stop());
+      cameraVideo.srcObject = null;
+      updateCameraButton();
+    }
+
+    function cameraError(error) {
+      if (error.name === 'NotAllowedError') return 'กรุณาอนุญาตให้เว็บเข้าถึงกล้อง หรือใช้ช่องกรอกบาร์โค้ด';
+      if (error.name === 'NotFoundError') return 'ไม่พบกล้องบนอุปกรณ์นี้ สามารถใช้เครื่องสแกนหรือกรอกบาร์โค้ดได้';
+      return 'เปิดกล้องไม่สำเร็จ สามารถใช้เครื่องสแกนหรือกรอกบาร์โค้ดได้';
+    }
+
+    async function startCamera(session) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false, video: {facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720}}
+        });
+        if (cameraSession !== session) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        session.stream = stream;
+        const zxing = await loadLibrary(CAMERA_SCRIPT, 'ZXingBrowser');
+        if (cameraSession !== session) return;
+        const reader = new zxing.BrowserMultiFormatReader();
+        session.controls = await reader.decodeFromStream(stream, cameraVideo, result => {
+          if (!result || cameraSession !== session) return;
+          const value = result.getText();
+          if (!barcodePattern.test(value)) return;
+          // CODE_128 values are literal identifiers, even when they contain only digits.
+          const format = result.getBarcodeFormat() === 4 ? 'CODE_128' : '';
+          closeCamera();
+          focusScanner();
+          void queueScan(value, format);
+        });
+        if (cameraSession !== session) session.controls.stop();
+      } catch (error) {
+        if (cameraSession !== session) return;
+        closeCamera();
+        showStatus(cameraError(error), 'error');
+        focusScanner();
+      }
+    }
+
+    function toggleCamera() {
+      if (cameraSession) {
+        closeCamera();
+        return;
+      }
+      if (cameraStart) return;
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        showStatus('กล้องต้องเปิดเว็บผ่าน HTTPS สามารถใช้เครื่องสแกนหรือกรอกบาร์โค้ดได้', 'error');
+        return;
+      }
+      const session = {stream: null, controls: null};
+      cameraSession = session;
+      updateCameraButton();
+      showStatus('');
+      cameraStart = startCamera(session).finally(() => { cameraStart = null; });
+    }
+
+    function normalizedDate(input) {
+      const text = String(input).trim();
+      if (!text) return null;
+      const separated = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})$/.exec(text);
+      const compact = /^(\d{2})(\d{2})(\d{2}|\d{4})$/.exec(text);
+      const match = separated || compact;
+      if (!match) return null;
+      let [, day, month, year] = match.map(Number);
+      if (year > 2500) year -= 543;
+      if (year < 100) year += year < 30 ? 2000 : 1900;
+      if (year < 1900 || year > 2100) return null;
+      const date = new Date(Date.UTC(year, month - 1, day));
+      if (date.getUTCDate() !== day || date.getUTCMonth() + 1 !== month || date.getUTCFullYear() !== year) return null;
+      return date;
+    }
+
+    function formatDate(date, buddhist = false) {
+      const pad = value => String(value).padStart(2, '0');
+      return pad(date.getUTCDate()) + '/' + pad(date.getUTCMonth() + 1) + '/' + (date.getUTCFullYear() + (buddhist ? 543 : 0));
+    }
+
+    function todayInBangkok() {
+      return normalizedDate(dateParts.format(new Date()));
+    }
+
+    function returnDateWarning() {
+      const note = byId('return-warning');
+      const date = normalizedDate(returnInput.value);
+      note.textContent = '';
+      if (returnInput.value.trim() && !date) note.textContent = 'กรุณาตรวจสอบรูปแบบวันที่';
+      if (date && date < todayInBangkok()) note.textContent = 'วันที่เปลี่ยนหรือคืนผ่านไปแล้ว กรุณาตรวจสอบก่อนพิมพ์';
+      note.hidden = !note.textContent;
+    }
+
+    function priceText(price) {
+      return price === null ? '–' : currency.format(price);
+    }
+
+    function totalText() {
+      const cents = products.reduce((sum, item) => sum + Math.round((item.price ?? 0) * 100) * item.qty, 0);
+      const total = currency.format(cents / 100) + ' บาท';
+      return products.some(item => item.price === null) ? total + ' (ยังมีรายการรอราคา)' : total;
+    }
+
+    function renderTotals() {
+      byId('item-count').textContent = products.length + ' รายการ · ' + products.reduce((sum, item) => sum + item.qty, 0) + ' ชิ้น';
+      byId('total').textContent = totalText();
+      printButton.disabled = printing || !products.length;
+      byId('empty-state').hidden = Boolean(products.length);
+      byId('table-wrap').hidden = !products.length;
+      byId('preview').hidden = !products.length;
+      if (previewFrame) cancelAnimationFrame(previewFrame);
+      previewFrame = requestAnimationFrame(renderPreview);
+    }
+
+    function inputCell(input, className) {
+      const cell = element('td', undefined, className);
+      cell.append(input);
+      return cell;
+    }
+
+    function renderProducts() {
+      const body = document.createDocumentFragment();
+      products.forEach((item, index) => {
+        const row = element('tr');
+        const qty = document.createElement('input');
+        qty.className = 'qty-input';
+        qty.type = 'number';
+        qty.min = '1';
+        qty.step = '1';
+        qty.value = item.qty;
+        qty.setAttribute('aria-label', 'จำนวน ' + item.name);
+        const lineTotal = element('td', priceText(item.price === null ? null : item.price * item.qty), 'line-total right');
+        const updateLineTotal = () => {
+          lineTotal.textContent = priceText(item.price === null ? null : item.price * item.qty);
+          renderTotals();
+        };
+        qty.addEventListener('input', () => {
+          const value = qty.valueAsNumber;
+          if (Number.isSafeInteger(value) && value > 0) item.qty = value;
+          updateLineTotal();
+        });
+        qty.addEventListener('blur', () => { qty.value = item.qty; });
+        qty.addEventListener('keydown', event => {
+          if (event.key === 'Enter') qty.blur();
+        });
+
+        let priceCell = element('td', priceText(item.price), 'right');
+        if (item.sourcePrice === null) {
+          const price = document.createElement('input');
+          price.type = 'text';
+          price.inputMode = 'decimal';
+          price.placeholder = 'ใส่ราคา';
+          price.className = 'price-input';
+          price.value = item.price ?? '';
+          price.setAttribute('aria-label', 'ราคาต่อชิ้น ' + item.name);
+          price.addEventListener('change', () => {
+            item.price = parsePrice(price.value);
+            if (item.price !== null) price.value = item.price;
+            price.setAttribute('aria-invalid', String(item.price === null));
+            updateLineTotal();
+          });
+          price.addEventListener('keydown', event => { if (event.key === 'Enter') price.blur(); });
+          priceCell = inputCell(price, 'right');
+        }
+
+        const expiry = document.createElement('input');
+        expiry.type = 'text';
+        expiry.className = 'date-input';
+        expiry.inputMode = 'numeric';
+        expiry.placeholder = 'วว/ดด/ปปปป';
+        expiry.maxLength = 10;
+        expiry.value = item.expiryDate;
+        expiry.setAttribute('aria-label', 'วันหมดอายุ ' + item.name);
+        expiry.setAttribute('aria-invalid', String(Boolean(item.expiryDate) && !normalizedDate(item.expiryDate)));
+        expiry.addEventListener('input', () => {
+          item.expiryDate = expiry.value.trim();
+          expiry.setAttribute('aria-invalid', String(Boolean(item.expiryDate) && !normalizedDate(item.expiryDate)));
+          renderTotals();
+        });
+        expiry.addEventListener('blur', () => {
+          const date = normalizedDate(item.expiryDate);
+          if (date) expiry.value = item.expiryDate = formatDate(date);
+          renderTotals();
+        });
+        expiry.addEventListener('keydown', event => { if (event.key === 'Enter') expiry.blur(); });
+
+        const remove = element('button', 'ลบ', 'remove');
+        remove.type = 'button';
+        remove.setAttribute('aria-label', 'ลบ ' + item.name);
+        remove.addEventListener('click', () => {
+          products.splice(products.indexOf(item), 1);
+          renderProducts();
+          focusScanner();
+          showStatus('ลบ ' + item.name + ' ออกจากรายการ');
+        });
+        row.append(
+          element('td', String(index + 1)), element('td', item.sku || '–', 'mono'),
+          element('td', item.barcode, 'mono'), element('td', item.name, 'name-cell'),
+          inputCell(qty, 'center'), priceCell, lineTotal, inputCell(expiry), inputCell(remove)
+        );
+        body.append(row);
+      });
+      productsTable.replaceChildren(body);
+      renderTotals();
+    }
+
+    function dateTextThai(date) {
+      const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+      return date.getUTCDate() + ' ' + months[date.getUTCMonth()] + ' ' + (date.getUTCFullYear() + 543);
+    }
+
+    function notesBlock() {
+      const dates = products.map(item => normalizedDate(item.expiryDate)).filter(Boolean).sort((a, b) => a - b);
+      const block = element('div', undefined, 'notes');
+      const returnDate = normalizedDate(returnInput.value);
+      const returnText = returnDate ? ' ภายในวันที่ ' + dateTextThai(returnDate) : '';
+      block.append(
+        element('p', 'วันที่ผลิต/บรรจุ ' + formatDate(todayInBangkok(), true) + ' (พ.ศ.)'),
+        element('p', 'วันหมดอายุที่เร็วที่สุด ' + (dates[0] ? formatDate(dates[0]) + ' (ค.ศ.)' : '–')),
+        element('p', 'สินค้าในกระเช้ามีอายุไม่เท่ากัน และราคาสินค้าอาจเปลี่ยนแปลงตามโปรโมชั่นที่หน้าร้าน'),
+        element('p', 'หากผู้บริโภคไม่พึงพอใจในคุณภาพสินค้า สามารถนำมาเปลี่ยนหรือคืนได้ ณ สาขาที่สั่งซื้อ' + returnText, 'return-note')
+      );
+      return block;
+    }
+
+    function makeLabel(withBarcode) {
+      const label = element('article', undefined, 'label');
+      const header = element('div', undefined, 'label-head');
+      header.append(element('h2', hamperInput.value.trim() || 'กระเช้าปีใหม่ 2026'), renderBrand(element('div', undefined, 'brand-mark')));
+      const table = element('table');
+      const thead = table.createTHead();
+      const heading = thead.insertRow();
+      const columns = withBarcode
+        ? [['ชื่อสินค้า', ''], ['บาร์โค้ด', 'label-barcode center']]
+        : [['ลำดับ', 'label-number'], ['ชื่อสินค้า', ''], ['จำนวน', 'label-qty center'], ['ราคา', 'label-price right'], ['หมดอายุ', 'label-expiry']];
+      for (const [name, style] of columns) {
+        const th = element('th', name, style);
+        th.scope = 'col';
+        heading.append(th);
+      }
+      const body = table.createTBody();
+      label.append(header, table, element('p', 'ราคารวม ' + totalText(), 'label-total'), element('p', '(รวมภาษีมูลค่าเพิ่ม)', 'vat'));
+      if (!withBarcode) label.append(notesBlock());
+      return {label, body};
+    }
+
+    function barcodeCell(item, barcodeLibrary) {
+      const {value, format} = printedCode(item);
+      const cell = element('td');
+      if (barcodeLibrary) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('barcode-svg');
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', 'บาร์โค้ด ' + value);
+        try {
+          barcodeLibrary(svg, value, {
+            format, font: 'monospace', fontSize: 10, textMargin: 1, width: 1.55, height: 26, margin: 0, marginLeft: 17, marginRight: 17
+          });
+          cell.append(svg);
+          return cell;
+        } catch {
+          cell.dataset.invalidBarcode = 'true';
+        }
+      }
+      cell.append(element('span', value, 'barcode-text'));
+      return cell;
+    }
+
+    function appendLabelRows(pair, item, index, barcodeLibrary) {
+      const expiry = normalizedDate(item.expiryDate);
+      const detailRow = pair.detail.body.insertRow();
+      detailRow.append(
+        element('td', String(index + 1)), element('td', item.name), element('td', String(item.qty), 'center'),
+        element('td', priceText(item.price === null ? null : item.price * item.qty), 'right'),
+        element('td', expiry ? formatDate(expiry) : item.expiryDate || '–')
+      );
+      const barcodeRow = pair.barcode.body.insertRow();
+      barcodeRow.append(element('td', item.name), barcodeCell(item, barcodeLibrary));
+      return [detailRow, barcodeRow];
+    }
+
+    function labelPair(container) {
+      const pair = {detail: makeLabel(false), barcode: makeLabel(true)};
+      container.append(pair.detail.label, pair.barcode.label);
+      return pair;
+    }
+
+    function renderPreview() {
+      const target = byId('preview-labels');
+      target.replaceChildren();
+      if (!products.length) return;
+      const pair = labelPair(target);
+      products.forEach((item, index) => appendLabelRows(pair, item, index, window.JsBarcode));
+    }
+
+    function makePrintSheet() {
+      const sheet = element('section', undefined, 'print-sheet');
+      printArea.append(sheet);
+      return {sheet, pair: labelPair(sheet)};
+    }
+
+    function buildPrintLabels(barcodeLibrary) {
+      printArea.replaceChildren();
+      const heightProbe = element('div');
+      heightProbe.style.height = '193mm';
+      printArea.append(heightProbe);
+      const maxHeight = heightProbe.getBoundingClientRect().height;
+      heightProbe.remove();
+      let page = makePrintSheet();
+      products.forEach((item, index) => {
+        const rows = appendLabelRows(page.pair, item, index, barcodeLibrary);
+        if (page.sheet.getBoundingClientRect().height > maxHeight && page.pair.detail.body.rows.length > 1) {
+          rows.forEach(row => row.remove());
+          page = makePrintSheet();
+          appendLabelRows(page.pair, item, index, barcodeLibrary);
+        }
+      });
+      if (printArea.querySelector('[data-invalid-barcode]')) {
+        throw new Error('มีบาร์โค้ดที่สร้างเป็นภาพไม่ได้ กรุณาตรวจสอบรหัสสินค้าในรายการ');
+      }
+    }
+
+    async function printLabels() {
+      if (printing || !products.length) return;
+      if (products.some(item => item.expiryDate && !normalizedDate(item.expiryDate))) {
+        showStatus('มีวันหมดอายุที่ไม่ถูกต้อง กรุณาตรวจสอบก่อนพิมพ์', 'error');
+        productsTable.querySelector('.date-input[aria-invalid="true"]')?.focus();
+        return;
+      }
+      if (products.some(item => item.price === null)) {
+        showStatus('มีสินค้าที่ยังไม่มีราคา กรุณากรอกราคาก่อนพิมพ์', 'error');
+        productsTable.querySelector('.price-input:placeholder-shown, .price-input[aria-invalid="true"]')?.focus();
+        return;
+      }
+      if (returnInput.value.trim() && !normalizedDate(returnInput.value)) {
+        showStatus('กรุณาตรวจสอบวันที่กำหนดเปลี่ยนหรือคืนก่อนพิมพ์', 'error');
+        returnInput.focus();
+        return;
+      }
+      printing = true;
+      renderTotals();
+      try {
+        const barcodeLibrary = await loadLibrary(BARCODE_SCRIPT, 'JsBarcode');
+        if (!products.length) return;
+        buildPrintLabels(barcodeLibrary);
+        window.print();
+      } catch (error) {
+        showStatus(error.message + ' กรุณาลองพิมพ์อีกครั้ง', 'error');
+      } finally {
+        printing = false;
+        renderTotals();
+      }
+    }
+
+    byId('scan-form').addEventListener('submit', event => {
+      event.preventDefault();
+      focusScanner();
+      void queueScan(scanInput.value);
+    });
+    cameraButton.addEventListener('click', toggleCamera);
+    printButton.addEventListener('click', printLabels);
+    window.addEventListener('pagehide', closeCamera);
+    window.addEventListener('afterprint', () => printArea.replaceChildren());
+    hamperInput.addEventListener('input', renderTotals);
+    returnInput.addEventListener('input', () => {
+      returnDateWarning();
+      renderTotals();
+    });
+    returnInput.addEventListener('blur', () => {
+      const date = normalizedDate(returnInput.value);
+      if (date) returnInput.value = formatDate(date, true);
+      returnDateWarning();
+      renderTotals();
+    });
+    document.querySelectorAll('[data-brand]').forEach(renderBrand);
+    returnDateWarning();
+    loadLibrary(BARCODE_SCRIPT, 'JsBarcode').then(renderTotals).catch(() => {});
+  </script>
+</body>
+</html>
